@@ -187,24 +187,6 @@ export function SiteHeader({ admin, onNavigate, currentPath = '/' }: SiteHeaderP
           </div>
         </div>
       )}
-
-      {/* Mobile Persistent Bottom Nav Bar (Public) */}
-      <nav className="mobile-bottom-bar" aria-label="Mobile Navigation">
-        {navLinks.map(link => {
-          const Icon = link.icon
-          const isActive = currentPath === link.path
-          return (
-            <button
-              key={link.path}
-              onClick={() => nav(link.path)}
-              className={`bottom-tab ${isActive ? 'active' : ''}`}
-            >
-              <Icon size={18} />
-              <span>{link.label}</span>
-            </button>
-          )
-        })}
-      </nav>
     </>
   )
 }

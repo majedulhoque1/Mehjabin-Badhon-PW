@@ -846,8 +846,8 @@ a { color: inherit; }
 }
 
 @media (max-width: 1080px) {
-  body { padding-bottom: 64px; }
-  .mobile-bottom-bar { display: flex; align-items: center; justify-content: space-around; }
+  .admin-main { padding-bottom: 80px; }
+  .mobile-bottom-bar.admin-bottom-bar { display: flex; align-items: center; justify-content: space-around; }
   .hamburger { display: flex; }
   .book-btn { display: none; }
   .main-nav { display: none; }
