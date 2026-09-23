@@ -404,19 +404,11 @@
 .footer-base { border-top: 1px solid var(--line); padding: 18px var(--gutter); display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); max-width: var(--max); margin: 0 auto; }
 
 /* ─── RESPONSIVE ──────────────────────────────────────────────────────────── */
-@media (max-width: 1024px) {
-  .ideas-grid { grid-template-columns: repeat(2, 1fr); }
-  .service-tiles { grid-template-columns: repeat(2, 1fr); }
-  .expertise-strip { grid-template-columns: repeat(2, 1fr); }
-  .service-body { padding-left: 0; }
-  .service-meta { grid-template-columns: 1fr; gap: 24px; }
-}
-
-@media (max-width: 960px) {
+@media (max-width: 1080px) {
   .hero { grid-template-columns: 1fr; padding: 32px 16px 44px; gap: 28px; width: 100%; box-sizing: border-box; }
   .hero h1 { font-size: clamp(32px, 8.2vw, 48px); line-height: 1.05; overflow-wrap: break-word; }
   .lede { font-size: 15.5px; margin: 16px 0 24px; }
-  .portrait-wrap { height: auto; aspect-ratio: 4 / 3; width: 100%; }
+  .portrait-wrap { height: auto; aspect-ratio: 4 / 3; width: 100%; max-height: 380px; }
   
   .expertise-strip { grid-template-columns: 1fr 1fr; width: 100%; box-sizing: border-box; }
   .expertise-strip span { padding: 14px 16px; font-size: 14.5px; border-bottom: 1px solid var(--line); overflow-wrap: break-word; }
@@ -434,8 +426,8 @@
   .about-section { grid-template-columns: 1fr; gap: 14px; padding: 36px 0; }
   .expertise-cols { grid-template-columns: 1fr; gap: 20px; }
 
-  .service-tiles { grid-template-columns: 1fr; gap: 12px; }
-  .ideas-grid { grid-template-columns: 1fr; gap: 12px; }
+  .service-tiles { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .ideas-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
   .ideas-grid.wide { grid-template-columns: 1fr; }
   .service-meta { grid-template-columns: 1fr; }
 
@@ -450,7 +442,7 @@
   .start-card { grid-template-columns: 32px minmax(0, 1fr) 20px; padding: 16px 18px; min-height: 52px; }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 640px) {
   .hero { padding: 24px 14px 36px; gap: 20px; }
   .hero h1 { font-size: clamp(28px, 8.5vw, 36px); letter-spacing: -.03em; }
   .lede { font-size: 14.5px; margin: 12px 0 20px; }
@@ -463,6 +455,9 @@
 
   .expertise-strip { grid-template-columns: 1fr; }
   .expertise-strip span { border-right: 0; text-align: center; padding: 12px 14px; font-size: 14px; }
+
+  .service-tiles { grid-template-columns: 1fr; }
+  .ideas-grid { grid-template-columns: 1fr; }
 
   .public-page, .article-page, .start-here-page { padding: 28px 14px 40px; width: 100%; box-sizing: border-box; }
   .page-header { margin-bottom: 28px; }
@@ -482,4 +477,3 @@
   .service-tile { padding: 18px; width: 100%; box-sizing: border-box; }
 }
 
-}

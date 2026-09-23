@@ -768,7 +768,7 @@ a { color: inherit; }
   .content-row > small:nth-child(4) { display: none; }
 }
 
-@media (max-width: 960px) {
+@media (max-width: 1080px) {
   .hamburger { display: flex; }
   .book-btn { display: none; }
   .main-nav { display: none; }
