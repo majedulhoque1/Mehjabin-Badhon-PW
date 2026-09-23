@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react'
-import { Menu, X } from 'lucide-react'
+import {
+  Menu, X, Home, User, Briefcase, BookOpen, Calendar,
+  LayoutDashboard, Users, FolderKanban, FileText, BarChart3
+} from 'lucide-react'
 
 interface SiteHeaderProps {
   readonly admin?: boolean
@@ -27,11 +30,11 @@ export function SiteHeader({ admin, onNavigate, currentPath = '/' }: SiteHeaderP
   }
 
   const adminNavLinks = [
-    { label: 'Dashboard', path: '/admin' },
-    { label: 'CRM', path: '/admin/crm' },
-    { label: 'Clients', path: '/admin/clients' },
-    { label: 'Content Studio', path: '/admin/content' },
-    { label: 'Analytics', path: '/admin/analytics' },
+    { label: 'Dashboard', path: '/admin', icon: LayoutDashboard },
+    { label: 'CRM', path: '/admin/crm', icon: Users },
+    { label: 'Clients', path: '/admin/clients', icon: FolderKanban },
+    { label: 'Content', path: '/admin/content', icon: FileText },
+    { label: 'Analytics', path: '/admin/analytics', icon: BarChart3 },
   ]
 
   if (admin) {
@@ -89,11 +92,37 @@ export function SiteHeader({ admin, onNavigate, currentPath = '/' }: SiteHeaderP
             </div>
           </div>
         )}
+
+        {/* Mobile Persistent Bottom Nav Bar (Admin) */}
+        <nav className="mobile-bottom-bar admin-bottom-bar" aria-label="Admin Navigation">
+          {adminNavLinks.map(link => {
+            const Icon = link.icon
+            const isActive = currentPath === link.path
+            return (
+              <button
+                key={link.path}
+                onClick={() => nav(link.path)}
+                className={`bottom-tab ${isActive ? 'active' : ''}`}
+              >
+                <Icon size={18} />
+                <span>{link.label}</span>
+              </button>
+            )
+          })}
+        </nav>
       </>
     )
   }
 
   const navLinks = [
+    { label: 'Home', path: '/', icon: Home },
+    { label: 'About', path: '/about', icon: User },
+    { label: 'Work', path: '/work-with-me', icon: Briefcase },
+    { label: 'Ideas', path: '/ideas', icon: BookOpen },
+    { label: 'Book', path: '/book', icon: Calendar },
+  ]
+
+  const headerNavLinks = [
     { label: 'Home', path: '/' },
     { label: 'About', path: '/about' },
     { label: 'Work With Me', path: '/work-with-me' },
@@ -109,7 +138,7 @@ export function SiteHeader({ admin, onNavigate, currentPath = '/' }: SiteHeaderP
           mehjabin badhon<br /><i>let's talk business</i>
         </button>
         <nav className="main-nav">
-          {navLinks.map(link => (
+          {headerNavLinks.map(link => (
             <button
               key={link.path}
               onClick={() => nav(link.path)}
@@ -141,7 +170,7 @@ export function SiteHeader({ admin, onNavigate, currentPath = '/' }: SiteHeaderP
               </button>
             </div>
             <nav>
-              {navLinks.map(link => (
+              {headerNavLinks.map(link => (
                 <button
                   key={link.path}
                   onClick={() => nav(link.path)}
@@ -158,6 +187,25 @@ export function SiteHeader({ admin, onNavigate, currentPath = '/' }: SiteHeaderP
           </div>
         </div>
       )}
+
+      {/* Mobile Persistent Bottom Nav Bar (Public) */}
+      <nav className="mobile-bottom-bar" aria-label="Mobile Navigation">
+        {navLinks.map(link => {
+          const Icon = link.icon
+          const isActive = currentPath === link.path
+          return (
+            <button
+              key={link.path}
+              onClick={() => nav(link.path)}
+              className={`bottom-tab ${isActive ? 'active' : ''}`}
+            >
+              <Icon size={18} />
+              <span>{link.label}</span>
+            </button>
+          )
+        })}
+      </nav>
     </>
   )
 }
+
