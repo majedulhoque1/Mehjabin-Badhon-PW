@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Menu, X } from 'lucide-react'
 
 interface SiteHeaderProps {
@@ -9,6 +9,17 @@ interface SiteHeaderProps {
 
 export function SiteHeader({ admin, onNavigate, currentPath = '/' }: SiteHeaderProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
+
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [mobileOpen])
 
   const nav = (path: string) => {
     setMobileOpen(false)
