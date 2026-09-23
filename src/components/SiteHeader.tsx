@@ -26,21 +26,70 @@ export function SiteHeader({ admin, onNavigate, currentPath = '/' }: SiteHeaderP
     onNavigate(path)
   }
 
+  const adminNavLinks = [
+    { label: 'Dashboard', path: '/admin' },
+    { label: 'CRM', path: '/admin/crm' },
+    { label: 'Clients', path: '/admin/clients' },
+    { label: 'Content Studio', path: '/admin/content' },
+    { label: 'Analytics', path: '/admin/analytics' },
+  ]
+
   if (admin) {
     return (
-      <header className="site-header admin-header">
-        <button className="wordmark" onClick={() => nav('/admin')}>
-          mehjabin badhon<br /><i>business os</i>
-        </button>
-        <nav>
-          <button onClick={() => nav('/admin')} className={currentPath === '/admin' ? 'active' : ''}>Dashboard</button>
-          <button onClick={() => nav('/admin/crm')} className={currentPath === '/admin/crm' ? 'active' : ''}>CRM</button>
-          <button onClick={() => nav('/admin/clients')} className={currentPath === '/admin/clients' ? 'active' : ''}>Clients</button>
-          <button onClick={() => nav('/admin/content')} className={currentPath === '/admin/content' ? 'active' : ''}>Content Studio</button>
-          <button onClick={() => nav('/admin/analytics')} className={currentPath === '/admin/analytics' ? 'active' : ''}>Analytics</button>
-        </nav>
-        <button className="header-exit" onClick={() => nav('/')}>↗ Public site</button>
-      </header>
+      <>
+        <header className="site-header admin-header">
+          <button className="wordmark" onClick={() => nav('/admin')}>
+            mehjabin badhon<br /><i>business os</i>
+          </button>
+          <nav className="admin-desktop-nav">
+            {adminNavLinks.map(link => (
+              <button
+                key={link.path}
+                onClick={() => nav(link.path)}
+                className={currentPath === link.path ? 'active' : ''}
+              >
+                {link.label}
+              </button>
+            ))}
+          </nav>
+          <div className="header-actions">
+            <button className="header-exit" onClick={() => nav('/')}>↗ Public site</button>
+            <button className="hamburger admin-hamburger" onClick={() => setMobileOpen(true)} aria-label="Open menu">
+              <Menu size={22} />
+            </button>
+          </div>
+        </header>
+
+        {mobileOpen && (
+          <div className="mobile-overlay" onClick={() => setMobileOpen(false)}>
+            <div className="mobile-nav admin-mobile-drawer" onClick={(e) => e.stopPropagation()}>
+              <div className="mobile-nav-top">
+                <button className="wordmark" onClick={() => nav('/admin')}>
+                  mehjabin badhon<br /><i>business os</i>
+                </button>
+                <button className="mobile-close" onClick={() => setMobileOpen(false)} aria-label="Close menu">
+                  <X size={20} />
+                </button>
+              </div>
+              <nav>
+                {adminNavLinks.map(link => (
+                  <button
+                    key={link.path}
+                    onClick={() => nav(link.path)}
+                    className={currentPath === link.path ? 'active' : ''}
+                  >
+                    <span>{link.label}</span>
+                    {currentPath === link.path && <span className="active-dot">●</span>}
+                  </button>
+                ))}
+              </nav>
+              <button className="primary mobile-book" onClick={() => nav('/')}>
+                ↗ Exit to Public Site
+              </button>
+            </div>
+          </div>
+        )}
+      </>
     )
   }
 
