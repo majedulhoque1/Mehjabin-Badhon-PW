@@ -1,39 +1,59 @@
-import { useMemo, useState } from 'react'
-import { ArrowRight, ArrowUpRight, Search, CheckCircle } from 'lucide-react'
-import { articles, ideas, services } from '../data/mockData'
+import { useEffect, useMemo, useState } from 'react'
+import { ArrowRight, ArrowUpRight, Search, CheckCircle, Compass } from 'lucide-react'
+import { articles as baseArticles, careerTimeline, services, trustedBy, type Article, type TrustedByEntry } from '../data/mockData'
 import { SiteHeader } from './SiteHeader'
 import { IdeaCard } from './IdeaCard'
 import { Booking } from './Booking'
+import { useReveal } from '../hooks/useReveal'
+import type { Go } from '../router'
 import './public-site.css'
 
-type Go = (path: string) => void
+type BookingInfo = { name: string; company: string; service: string; email: string; phone: string; requirement: string }
+
 type PublicSiteProps = Readonly<{
   path: string
+  query: URLSearchParams
+  hash: string
   go: Go
-  onBooking: (info: { name: string; company: string; service: string; email: string; phone: string; requirement: string }) => void
+  onBooking: (info: BookingInfo) => string
+  extraArticles: Article[]
+  onStartTour: () => void
 }>
 
-export function PublicSite({ path, go, onBooking }: PublicSiteProps) {
-  if (path === '/book') return <><SiteHeader onNavigate={go} currentPath={path} /><Booking onComplete={onBooking} /><PublicFooter go={go} /></>
-  if (path === '/start') return <StartHerePage go={go} />
-  if (path === '/ideas') return <IdeasPage go={go} />
-  if (path.startsWith('/ideas/')) return <ArticlePage go={go} slug={path.split('/').pop() || ''} />
-  if (path === '/work-with-me') return <WorkWithMePage go={go} />
-  if (path === '/about') return <AboutPage go={go} />
-  return <HomePage go={go} />
+export function PublicSite({ path, query, hash, go, onBooking, extraArticles, onStartTour }: PublicSiteProps) {
+  const allArticles = useMemo(() => [...baseArticles, ...extraArticles], [extraArticles])
+
+  if (path === '/book') {
+    return (
+      <>
+        <SiteHeader onNavigate={go} currentPath={path} />
+        <Booking onComplete={onBooking} initialServiceId={query.get('service')} go={go} />
+        <PublicFooter go={go} onStartTour={onStartTour} />
+      </>
+    )
+  }
+  if (path === '/start') return <StartHerePage go={go} onStartTour={onStartTour} />
+  if (path === '/ideas') return <IdeasPage go={go} articles={allArticles} onStartTour={onStartTour} />
+  if (path.startsWith('/ideas/')) return <ArticlePage go={go} slug={path.split('/').pop() || ''} articles={allArticles} onStartTour={onStartTour} />
+  if (path === '/work-with-me') return <WorkWithMePage go={go} hash={hash} onStartTour={onStartTour} />
+  if (path === '/about') return <AboutPage go={go} onStartTour={onStartTour} />
+  return <HomePage go={go} articles={allArticles} onStartTour={onStartTour} />
 }
 
 // ─── HOME ─────────────────────────────────────────────────────────────────────
 
-function HomePage({ go }: Readonly<{ go: Go }>) {
-  const problemCards = [
-    { label: 'I need business clarity', sub: 'Strategy Consulting', path: '/work-with-me' },
-    { label: 'I need to understand my customers', sub: 'Customer & Market Insights', path: '/work-with-me' },
-    { label: 'I want to grow', sub: 'Growth Strategy', path: '/work-with-me' },
-    { label: 'I need guidance', sub: '1:1 Advisory / Coaching', path: '/work-with-me' },
-    { label: 'I want to develop my team', sub: 'Workshops & Training', path: '/work-with-me' },
-    { label: 'I need a speaker', sub: 'Speaking', path: '/work-with-me' },
-  ]
+const problemCards = [
+  { label: 'I need business clarity', sub: 'Strategy Consulting', serviceId: 'strategy' },
+  { label: 'I need to understand my customers', sub: 'Customer & Market Insights', serviceId: 'customer-insights' },
+  { label: 'I want to grow', sub: 'Growth Strategy', serviceId: 'growth' },
+  { label: 'I need guidance', sub: '1:1 Advisory / Coaching', serviceId: 'advisory' },
+  { label: 'I want to develop my team', sub: 'Workshops & Training', serviceId: 'workshops' },
+  { label: 'I need a speaker', sub: 'Speaking', serviceId: 'speaking' },
+]
+
+function HomePage({ go, articles, onStartTour }: Readonly<{ go: Go; articles: Article[]; onStartTour: () => void }>) {
+  useReveal()
+  const [featured, ...rest] = articles
 
   return (
     <>
@@ -44,9 +64,12 @@ function HomePage({ go }: Readonly<{ go: Go }>) {
         <section className="hero">
           <div className="hero-copy">
             <p className="eyebrow">MEHJABIN BADHON · STRATEGY & ADVISORY</p>
-            <h1>
-              Better business<br />starts with<br /><em>better understanding.</em>
+            <h1 className="hero-headline">
+              <span className="reveal-line" style={{ animationDelay: '0ms' }}>Better business</span>
+              <span className="reveal-line" style={{ animationDelay: '90ms' }}>starts with</span>
+              <span className="reveal-line reveal-em" style={{ animationDelay: '180ms' }}><em>better understanding.</em></span>
             </h1>
+            <p className="hero-bangla" lang="bn">ভালো ব্যবসা শুরু হয় ভালো বোঝাপড়া থেকে।</p>
             <p className="lede">
               I help businesses understand their customers, clarify their strategy
               and turn ideas into practical opportunities for growth.
@@ -61,15 +84,15 @@ function HomePage({ go }: Readonly<{ go: Go }>) {
             </div>
           </div>
           <div className="portrait-wrap">
-            <img src="/mehjabin-hero.jpg" alt="Mehjabin Badhon - Business Strategy & Advisory" />
+            <img src="/mehjabin-portrait.jpg" alt="Mehjabin Badhon, Founder and Growth Lead at Let's Talk Business" />
             <span className="portrait-note">
-              Mehjabin Badhon<br /><i>Founder, Let's Talk Business</i>
+              Mehjabin Badhon<br /><i>Founder & Growth Lead, Let's Talk Business</i>
             </span>
           </div>
         </section>
 
         {/* ── EXPERTISE STRIP ── */}
-        <section className="expertise-strip">
+        <section className="expertise-strip" data-reveal>
           <span>Business Strategy</span>
           <span>Customer Experience</span>
           <span>Market Research</span>
@@ -78,11 +101,11 @@ function HomePage({ go }: Readonly<{ go: Go }>) {
 
         {/* ── PROBLEM FIRST ── */}
         <section className="problems">
-          <p className="eyebrow">START WITH YOUR QUESTION</p>
-          <h2>What are you trying<br />to solve?</h2>
+          <p className="eyebrow" data-reveal>START WITH YOUR QUESTION</p>
+          <h2 data-reveal>What are you trying<br />to solve?</h2>
           <div className="problem-list">
             {problemCards.map((card, i) => (
-              <button key={card.label} onClick={() => go(card.path)} className="problem-row">
+              <button key={card.label} data-reveal onClick={() => go(`/work-with-me#${card.serviceId}`)} className="problem-row">
                 <b className="problem-num">0{i + 1}</b>
                 <div className="problem-text">
                   <span className="problem-label">{card.label}</span>
@@ -92,17 +115,18 @@ function HomePage({ go }: Readonly<{ go: Go }>) {
               </button>
             ))}
           </div>
-          <button className="text-button start-here-link" onClick={() => go('/start')}>
+          <button className="text-button start-here-link" data-reveal onClick={() => go('/start')}>
             Not sure where to start? Let me help. <ArrowUpRight size={15} />
           </button>
         </section>
 
         {/* ── PHILOSOPHY ── */}
-        <section className="philosophy">
+        <section className="philosophy" data-reveal>
           <p className="eyebrow">A POINT OF VIEW</p>
           <blockquote>
             "Business isn't built around products.<br />It's built around people."
           </blockquote>
+          <p className="philosophy-bangla" lang="bn">ব্যবসা পণ্যের চারপাশে গড়ে ওঠে না, গড়ে ওঠে মানুষকে ঘিরে।</p>
           <p>
             The businesses I admire most are the ones that pay closer attention to the
             people they exist to serve. Not as segments or data points, but as human
@@ -114,9 +138,9 @@ function HomePage({ go }: Readonly<{ go: Go }>) {
           </p>
         </section>
 
-        {/* ── FEATURED IDEAS ── */}
+        {/* ── FEATURED IDEA + LIST ── */}
         <section className="ideas-section">
-          <div className="section-head">
+          <div className="section-head" data-reveal>
             <div>
               <p className="eyebrow">THINKING OUT LOUD</p>
               <h2>Ideas for better business.</h2>
@@ -125,23 +149,33 @@ function HomePage({ go }: Readonly<{ go: Go }>) {
               All ideas <ArrowRight size={16} />
             </button>
           </div>
-          <div className="ideas-grid">
-            {ideas.slice(0, 4).map(idea => {
-              const article = articles.find(a => a.category === idea.category && a.title === idea.title)
-              return (
-                <IdeaCard
-                  key={idea.title}
-                  idea={idea}
-                  onOpen={() => go(`/ideas/${article?.slug ?? 'customer-is-not-a-segment'}`)}
-                />
-              )
-            })}
-          </div>
+
+          {featured && (
+            <button className="featured-idea" data-reveal onClick={() => go(`/ideas/${featured.slug}`)}>
+              <span className="featured-cat">{featured.category} · {featured.type}</span>
+              <h3>{featured.title}</h3>
+              <p>{featured.excerpt}</p>
+              <span className="featured-cta">Read the piece <ArrowUpRight size={15} /></span>
+            </button>
+          )}
+
+          <ol className="idea-list">
+            {rest.slice(0, 3).map((idea, i) => (
+              <li key={idea.title} data-reveal>
+                <button onClick={() => go(`/ideas/${idea.slug}`)}>
+                  <span className="idea-list-num">0{i + 2}</span>
+                  <span className="idea-list-title">{idea.title}</span>
+                  <span className="idea-list-cat">{idea.category}</span>
+                  <ArrowUpRight size={16} />
+                </button>
+              </li>
+            ))}
+          </ol>
         </section>
 
         {/* ── WORK WITH ME TEASER ── */}
         <section className="services-teaser">
-          <div className="section-head">
+          <div className="section-head" data-reveal>
             <div>
               <p className="eyebrow">WORK WITH ME</p>
               <h2>Where can I help?</h2>
@@ -152,67 +186,93 @@ function HomePage({ go }: Readonly<{ go: Go }>) {
           </div>
           <div className="service-tiles">
             {services.slice(0, 4).map((s, i) => (
-              <article key={s.id} className="service-tile" onClick={() => go('/work-with-me')}>
+              <article key={s.id} className="service-tile" data-reveal>
                 <span className="tile-num">0{i + 1}</span>
                 <h3>{s.title}</h3>
                 <p>{s.tagline}</p>
-                <button className="text-button small">Learn more <ArrowRight size={14} /></button>
+                <button className="text-button small" onClick={() => go(`/work-with-me#${s.id}`)}>
+                  Learn more <ArrowRight size={14} />
+                </button>
               </article>
             ))}
           </div>
         </section>
 
-        {/* ── SOCIAL PROOF ── */}
-        <section className="social-proof">
+        {/* ── TRUSTED BY ── */}
+        <section className="trusted-section" data-reveal>
           <p className="eyebrow">TRUSTED BY</p>
-          <p className="proof-note">
-            Client references and case studies available on request. Testimonials coming soon.
-          </p>
-          <div className="proof-placeholders">
-            {['Consumer Brand', 'Digital Startup', 'Enterprise Team', 'NGO / Social Enterprise', 'Media Company'].map(t => (
-              <div key={t} className="proof-placeholder">{t}</div>
-            ))}
-          </div>
-          <div className="proof-stats">
-            <div className="stat"><strong>10+</strong><span>Years in business strategy & consumer research</span></div>
-            <div className="stat"><strong>Dhaka</strong><span>Based in Bangladesh, working globally</span></div>
-            <div className="stat"><strong>Ideas</strong><span>Regularly published on LinkedIn and here</span></div>
-          </div>
+          <TrustedByMarquee />
         </section>
 
-        {/* ── FINAL CTA ── */}
-        <section className="final-cta">
-          <p className="eyebrow">LET'S BEGIN</p>
-          <h2>Have a business problem<br />worth talking through?</h2>
-          <p>Every good engagement starts with a single conversation.</p>
-          <button className="primary" onClick={() => go('/book')}>
-            Let's Talk <ArrowRight size={16} />
-          </button>
+        {/* ── IN THE ROOM ── */}
+        <section className="in-the-room" data-reveal>
+          <div className="itr-media">
+            <img src="/mehjabin-speaking.jpg" alt="Mehjabin Badhon speaking on a business panel" />
+          </div>
+          <div className="itr-copy">
+            <p className="eyebrow">IN THE ROOM</p>
+            <h2>Conversations, not just consulting.</h2>
+            <p>
+              Mehjabin has run a full-day training on customer analytics for marketing and
+              sales professionals — "Consumer Analytics to Increase Sales" — at the Prothom
+              Alo Conference Hall, and speaks on panels about customer-led growth.
+            </p>
+            <p className="itr-note">
+              Client references and testimonials are available on request. None are published
+              here yet — this prototype doesn't print quotes nobody said.
+            </p>
+          </div>
         </section>
 
       </main>
-      <PublicFooter go={go} />
+      <PublicFooter go={go} onStartTour={onStartTour} />
     </>
+  )
+}
+
+function TrustedItem({ t }: Readonly<{ t: TrustedByEntry }>) {
+  return (
+    <div className="trusted-item">
+      {t.logoKind === 'image' && t.logo
+        ? <img src={t.logo} alt={t.name} className="trusted-logo-img" />
+        : <span className="trusted-wordmark">{t.name}</span>}
+      <span className="trusted-caption">{t.role} · {t.years}</span>
+    </div>
+  )
+}
+
+function TrustedByMarquee() {
+  return (
+    <div className="trusted-marquee">
+      <div className="trusted-track">
+        <div className="trusted-set">
+          {trustedBy.map(t => <TrustedItem key={t.name} t={t} />)}
+        </div>
+        <div className="trusted-set" aria-hidden="true">
+          {trustedBy.map(t => <TrustedItem key={`${t.name}-dup`} t={t} />)}
+        </div>
+      </div>
+    </div>
   )
 }
 
 // ─── ABOUT ────────────────────────────────────────────────────────────────────
 
-function AboutPage({ go }: Readonly<{ go: Go }>) {
+function AboutPage({ go, onStartTour }: Readonly<{ go: Go; onStartTour: () => void }>) {
+  useReveal()
   return (
     <>
       <SiteHeader onNavigate={go} currentPath="/about" />
       <main className="public-page about-page">
 
-        <div className="page-header">
+        <div className="page-header" data-reveal>
           <p className="eyebrow">ABOUT MEHJABIN</p>
           <h1>I'm interested in the<br /><em>why behind the what.</em></h1>
         </div>
 
-        {/* Intro split */}
-        <section className="about-intro">
+        <section className="about-intro" data-reveal>
           <div className="about-portrait">
-            <img src="/screen.png" alt="Mehjabin Badhon" />
+            <img src="/mehjabin-portrait.jpg" alt="Mehjabin Badhon" />
           </div>
           <div className="about-intro-copy">
             <p className="lede">
@@ -231,39 +291,34 @@ function AboutPage({ go }: Readonly<{ go: Go }>) {
           </div>
         </section>
 
-        {/* Journey */}
-        <section className="about-section">
+        <section className="about-section about-timeline-section" data-reveal>
           <div className="about-section-label">
             <p className="eyebrow">THE JOURNEY</p>
           </div>
           <div className="about-section-body">
-            <h2>A career shaped by questions.</h2>
-            <p>
-              My professional journey has taken me through research, strategy and advisory
-              roles — always circling back to the same core question: do businesses really
-              understand the people they are trying to serve?
-            </p>
-            <p>
-              The answer, more often than not, is that they think they do. The gap between
-              what businesses assume and what customers actually experience is where most
-              of the opportunity lives.
-            </p>
-            <p>
-              I have spent my career working in and around that gap — helping teams
-              see it clearly and do something useful with it.
-            </p>
+            <h2>A career built on the same question.</h2>
+            <ol className="career-timeline">
+              {careerTimeline.map(t => (
+                <li key={t.org}>
+                  <span className="ct-year">{t.year}</span>
+                  <div>
+                    <b>{t.role}</b>
+                    <span className="ct-org">{t.org}</span>
+                    <p>{t.note}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
           </div>
         </section>
 
-        {/* Quote */}
-        <section className="about-pullquote">
+        <section className="about-pullquote" data-reveal>
           <blockquote>
             "The work is not to make business sound more complicated. It is to make the important things clearer."
           </blockquote>
         </section>
 
-        {/* Belief */}
-        <section className="about-section">
+        <section className="about-section" data-reveal>
           <div className="about-section-label">
             <p className="eyebrow">THE BELIEF</p>
           </div>
@@ -281,8 +336,7 @@ function AboutPage({ go }: Readonly<{ go: Go }>) {
           </div>
         </section>
 
-        {/* Expertise */}
-        <section className="about-expertise">
+        <section className="about-expertise" data-reveal>
           <p className="eyebrow">THE EXPERTISE</p>
           <div className="expertise-cols">
             <div>
@@ -300,8 +354,7 @@ function AboutPage({ go }: Readonly<{ go: Go }>) {
           </div>
         </section>
 
-        {/* Current work */}
-        <section className="about-current">
+        <section className="about-current" data-reveal>
           <p className="eyebrow">CURRENT WORK</p>
           <h2>Let's Talk Business</h2>
           <p>
@@ -324,22 +377,27 @@ function AboutPage({ go }: Readonly<{ go: Go }>) {
         </section>
 
       </main>
-      <PublicFooter go={go} />
+      <PublicFooter go={go} onStartTour={onStartTour} />
     </>
   )
 }
 
 // ─── WORK WITH ME ─────────────────────────────────────────────────────────────
 
-function WorkWithMePage({ go }: Readonly<{ go: Go }>) {
-  const [activeService, setActiveService] = useState<string | null>(null)
+function WorkWithMePage({ go, hash, onStartTour }: Readonly<{ go: Go; hash: string; onStartTour: () => void }>) {
+  useReveal()
+  const [activeService, setActiveService] = useState<string | null>(hash || null)
+
+  useEffect(() => {
+    if (hash) setActiveService(hash)
+  }, [hash])
 
   return (
     <>
       <SiteHeader onNavigate={go} currentPath="/work-with-me" />
       <main className="public-page work-page">
 
-        <div className="page-header">
+        <div className="page-header" data-reveal>
           <p className="eyebrow">WORK WITH ME</p>
           <h1>Start with the<br /><em>problem in front of you.</em></h1>
           <p className="page-lede">
@@ -348,7 +406,7 @@ function WorkWithMePage({ go }: Readonly<{ go: Go }>) {
           </p>
         </div>
 
-        <div className="challenge-intro">
+        <div className="challenge-intro" data-reveal>
           <h2>Choose your challenge.</h2>
         </div>
 
@@ -356,10 +414,13 @@ function WorkWithMePage({ go }: Readonly<{ go: Go }>) {
           {services.map((s, i) => (
             <article
               key={s.id}
+              id={s.id}
+              data-reveal
               className={`service-item${activeService === s.id ? ' open' : ''}`}
             >
               <button
                 className="service-header"
+                aria-expanded={activeService === s.id}
                 onClick={() => setActiveService(activeService === s.id ? null : s.id)}
               >
                 <span className="service-num">0{i + 1}</span>
@@ -387,7 +448,7 @@ function WorkWithMePage({ go }: Readonly<{ go: Go }>) {
                       </ul>
                     </div>
                   </div>
-                  <button className="primary" onClick={() => go('/book')}>
+                  <button className="primary" onClick={() => go(`/book?service=${s.id}`)}>
                     {s.cta} <ArrowRight size={16} />
                   </button>
                 </div>
@@ -396,7 +457,7 @@ function WorkWithMePage({ go }: Readonly<{ go: Go }>) {
           ))}
         </div>
 
-        <section className="work-cta">
+        <section className="work-cta" data-reveal>
           <h2>Not sure which is right for you?</h2>
           <p>Start with a conversation. We'll figure out the right fit together.</p>
           <button className="primary" onClick={() => go('/book')}>
@@ -408,33 +469,38 @@ function WorkWithMePage({ go }: Readonly<{ go: Go }>) {
         </section>
 
       </main>
-      <PublicFooter go={go} />
+      <PublicFooter go={go} onStartTour={onStartTour} />
     </>
   )
 }
 
 // ─── IDEAS ────────────────────────────────────────────────────────────────────
 
-function IdeasPage({ go }: Readonly<{ go: Go }>) {
-  const [filter, setFilter] = useState('All')
-  const [query, setQuery] = useState('')
+const categories = ['All', 'Strategy', 'Customer', 'Marketing', 'Growth', 'Bangladesh Business', 'Leadership', 'Future']
+const types = ['All types', 'Article', 'Insight', 'Video', 'Talk']
 
-  const categories = ['All', 'Strategy', 'Customer', 'Marketing', 'Growth', 'Bangladesh Business', 'Leadership', 'Future']
+function IdeasPage({ go, articles, onStartTour }: Readonly<{ go: Go; articles: Article[]; onStartTour: () => void }>) {
+  const [filter, setFilter] = useState('All')
+  const [typeFilter, setTypeFilter] = useState('All types')
+  const [query, setQuery] = useState('')
 
   const list = useMemo(() =>
     articles.filter(x =>
       (filter === 'All' || x.category === filter) &&
-      x.title.toLowerCase().includes(query.toLowerCase())
+      (typeFilter === 'All types' || x.type === typeFilter) &&
+      (x.title.toLowerCase().includes(query.toLowerCase()) || x.excerpt.toLowerCase().includes(query.toLowerCase()))
     ),
-    [filter, query]
+    [articles, filter, typeFilter, query]
   )
+
+  useReveal([filter, typeFilter, query, list.length])
 
   return (
     <>
       <SiteHeader onNavigate={go} currentPath="/ideas" />
       <main className="public-page ideas-page">
 
-        <div className="page-header">
+        <div className="page-header" data-reveal>
           <p className="eyebrow">IDEAS</p>
           <h1>Things worth<br /><em>thinking about.</em></h1>
           <p className="page-lede">
@@ -443,39 +509,38 @@ function IdeasPage({ go }: Readonly<{ go: Go }>) {
           </p>
         </div>
 
-        <div className="library-tools">
+        <div className="library-tools" data-reveal>
           <div className="filter-tabs">
             {categories.map(x => (
-              <button
-                key={x}
-                className={filter === x ? 'active' : ''}
-                onClick={() => setFilter(x)}
-              >
+              <button key={x} className={filter === x ? 'active' : ''} onClick={() => setFilter(x)}>
                 {x}
               </button>
             ))}
           </div>
-          <label className="search-box">
-            <Search size={15} />
-            <input
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-              placeholder="Search ideas…"
-            />
-          </label>
+          <div className="library-tools-row2">
+            <select className="type-select" value={typeFilter} onChange={e => setTypeFilter(e.target.value)} aria-label="Filter by content type">
+              {types.map(t => <option key={t}>{t}</option>)}
+            </select>
+            <label className="search-box">
+              <Search size={15} />
+              <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search ideas..." />
+            </label>
+          </div>
         </div>
 
         {list.length === 0 ? (
-          <div className="empty-state">
+          <div className="empty-state" data-reveal>
             <p>No results for "{query}" in {filter}.</p>
-            <button className="text-button" onClick={() => { setFilter('All'); setQuery('') }}>Clear filters</button>
+            <button className="text-button" onClick={() => { setFilter('All'); setTypeFilter('All types'); setQuery('') }}>Clear filters</button>
           </div>
         ) : (
           <div className="ideas-grid wide">
-            {list.map(article => (
+            {list.map((article, i) => (
               <IdeaCard
                 key={article.slug}
                 idea={article}
+                index={i}
+                isDemo={article.isDemo}
                 onOpen={() => go(`/ideas/${article.slug}`)}
               />
             ))}
@@ -483,95 +548,134 @@ function IdeasPage({ go }: Readonly<{ go: Go }>) {
         )}
 
       </main>
-      <PublicFooter go={go} />
+      <PublicFooter go={go} onStartTour={onStartTour} />
     </>
   )
 }
 
 // ─── ARTICLE ─────────────────────────────────────────────────────────────────
 
-function ArticlePage({ go, slug }: Readonly<{ go: Go; slug: string }>) {
+function ReadingProgress() {
+  const [pct, setPct] = useState(0)
+  useEffect(() => {
+    const onScroll = () => {
+      const el = document.querySelector('.article-body')
+      if (!el) return
+      const rect = el.getBoundingClientRect()
+      const total = rect.height - innerHeight * 0.5
+      const scrolled = Math.min(Math.max(-rect.top, 0), Math.max(total, 1))
+      setPct(total > 0 ? (scrolled / total) * 100 : 0)
+    }
+    addEventListener('scroll', onScroll, { passive: true })
+    onScroll()
+    return () => removeEventListener('scroll', onScroll)
+  }, [])
+  return <div className="reading-progress"><div style={{ width: `${pct}%` }} /></div>
+}
+
+const categoryToServiceId: Record<string, string> = {
+  Growth: 'growth',
+  Customer: 'customer-insights',
+  Strategy: 'strategy',
+  'Bangladesh Business': 'customer-insights',
+  Marketing: 'growth',
+  Leadership: 'advisory',
+  Future: 'speaking',
+}
+
+function ArticlePage({ go, slug, articles, onStartTour }: Readonly<{ go: Go; slug: string; articles: Article[]; onStartTour: () => void }>) {
   const article = articles.find(x => x.slug === slug) || articles[0]
-  const related = articles.filter(x => x.slug !== article.slug).slice(0, 2)
+  const related = articles.filter(x => x.slug !== article.slug && x.category === article.category)
+  const relatedFallback = articles.filter(x => x.slug !== article.slug)
+  const relatedList = (related.length > 0 ? related : relatedFallback).slice(0, 2)
+  const relatedService = services.find(s => s.id === categoryToServiceId[article.category]) ?? services[0]
+
+  useReveal([slug])
 
   return (
     <>
+      <ReadingProgress />
       <SiteHeader onNavigate={go} currentPath="/ideas" />
       <main className="article-page">
 
-        <div className="article-header">
-          <button className="back-link" onClick={() => go('/ideas')}>← Ideas</button>
+        <div className="article-header" data-reveal>
+          <button className="back-link" onClick={() => go('/ideas')}>&larr; Ideas</button>
           <div className="article-meta">
             <span className="cat-badge">{article.category}</span>
             <span>{article.type}</span>
             <span>{article.date}</span>
-            {'readTime' in article && <span>{(article as typeof articles[0]).readTime}</span>}
+            <span>{article.readTime}</span>
+            {article.isDemo && <span className="demo-pill">DEMO</span>}
           </div>
           <h1>{article.title}</h1>
           <p className="article-dek">{article.excerpt}</p>
         </div>
 
-        <div className="article-hero">
-          <img src="/screen.png" alt="Mehjabin Badhon" />
-          <span className="article-byline">Mehjabin Badhon · Let's Talk Business</span>
+        <div className="article-cover" data-reveal data-cat={article.category}>
+          <span className="article-cover-mark">&ldquo;</span>
+          <span className="article-cover-cat">{article.category}</span>
+          <span className="article-cover-byline">Mehjabin Badhon &middot; Let's Talk Business</span>
         </div>
+
+        {article.note && <p className="article-note">{article.note}</p>}
 
         <div className="article-body">
           {article.body.map((text, i) => (
-            i === 2
-              ? <><blockquote key={i}>Understanding people well is not a soft skill. It is strategic infrastructure.</blockquote><p key={`${i}b`}>{text}</p></>
+            i === Math.min(2, article.body.length - 1)
+              ? <div key={i}><blockquote>{article.pullQuote}</blockquote><p>{text}</p></div>
               : <p key={i}>{text}</p>
           ))}
         </div>
 
-        <div className="article-end-cta">
+        <div className="article-end-cta" data-reveal>
           <h2>Have a question like this in your business?</h2>
           <p>I offer strategy and advisory conversations to help leaders think through exactly these kinds of problems.</p>
-          <button className="primary" onClick={() => go('/book')}>
+          <button className="primary" onClick={() => go(`/book?service=${relatedService.id}`)}>
             Talk it through <ArrowRight size={16} />
           </button>
         </div>
 
-        {related.length > 0 && (
-          <div className="related-ideas">
+        {relatedList.length > 0 && (
+          <div className="related-ideas" data-reveal>
             <p className="eyebrow">CONTINUE READING</p>
             <div className="related-grid">
-              {related.map(x => (
-                <IdeaCard key={x.slug} idea={x} onOpen={() => go(`/ideas/${x.slug}`)} />
+              {relatedList.map(x => (
+                <IdeaCard key={x.slug} idea={x} isDemo={x.isDemo} onOpen={() => go(`/ideas/${x.slug}`)} />
               ))}
             </div>
           </div>
         )}
 
       </main>
-      <PublicFooter go={go} />
+      <PublicFooter go={go} onStartTour={onStartTour} />
     </>
   )
 }
 
 // ─── START HERE ──────────────────────────────────────────────────────────────
 
-function StartHerePage({ go }: Readonly<{ go: Go }>) {
+function StartHerePage({ go, onStartTour }: Readonly<{ go: Go; onStartTour: () => void }>) {
+  useReveal()
   const paths = [
-    { label: "I'm building a business.", sub: 'Explore Business Strategy', desc: 'Get clarity on direction, priorities and the decisions that matter most.', path: '/work-with-me', icon: '◈' },
-    { label: "I'm trying to grow.", sub: 'Explore Growth', desc: 'Find the sustainable, practical opportunities your business is ready for.', path: '/work-with-me', icon: '↑' },
-    { label: "I'm struggling to understand my customers.", sub: 'Customer Strategy', desc: 'Build a real picture of who your customers are and what they need.', path: '/work-with-me', icon: '◎' },
-    { label: "I want to work directly with Mehjabin.", sub: 'Book a Consultation', desc: "Start with a conversation. We'll find the right fit together.", path: '/book', icon: '→' },
-    { label: "I want to learn from her thinking.", sub: 'Explore Ideas', desc: 'Articles, talks and insights on business, customers and growth.', path: '/ideas', icon: '✦' },
+    { label: "I'm building a business.", sub: 'Explore Business Strategy', desc: 'Get clarity on direction, priorities and the decisions that matter most.', path: '/work-with-me#strategy', icon: <Compass size={20} /> },
+    { label: "I'm trying to grow.", sub: 'Explore Growth', desc: 'Find the sustainable, practical opportunities your business is ready for.', path: '/work-with-me#growth', icon: '↑' },
+    { label: "I'm struggling to understand my customers.", sub: 'Customer Strategy', desc: 'Build a real picture of who your customers are and what they need.', path: '/work-with-me#customer-insights', icon: '◎' },
+    { label: 'I want to work directly with Mehjabin.', sub: 'Book a Consultation', desc: "Start with a conversation. We'll find the right fit together.", path: '/book', icon: '→' },
+    { label: 'I want to learn from her thinking.', sub: 'Explore Ideas', desc: 'Articles, talks and insights on business, customers and growth.', path: '/ideas', icon: '✦' },
   ]
 
   return (
     <>
       <SiteHeader onNavigate={go} currentPath="/" />
       <main className="start-here-page">
-        <div className="start-header">
+        <div className="start-header" data-reveal>
           <p className="eyebrow">START HERE</p>
           <h1>What brings<br /><em>you here?</em></h1>
           <p className="lede">Choose the statement that best describes where you are right now.</p>
         </div>
         <div className="start-grid">
           {paths.map(p => (
-            <button key={p.label} className="start-card" onClick={() => go(p.path)}>
+            <button key={p.label} className="start-card" data-reveal onClick={() => go(p.path)}>
               <span className="start-icon">{p.icon}</span>
               <div className="start-card-body">
                 <strong>{p.label}</strong>
@@ -583,16 +687,21 @@ function StartHerePage({ go }: Readonly<{ go: Go }>) {
           ))}
         </div>
       </main>
-      <PublicFooter go={go} />
+      <PublicFooter go={go} onStartTour={onStartTour} />
     </>
   )
 }
 
 // ─── FOOTER ───────────────────────────────────────────────────────────────────
 
-function PublicFooter({ go }: Readonly<{ go: Go }>) {
+function PublicFooter({ go, onStartTour }: Readonly<{ go: Go; onStartTour: () => void }>) {
   return (
     <footer className="public-footer">
+      <div className="footer-statement">
+        <p className="eyebrow">LET'S TALK BUSINESS</p>
+        <h2>Have a business problem<br />worth talking through?</h2>
+        <button className="primary" onClick={() => go('/book')}>Let's Talk <ArrowRight size={16} /></button>
+      </div>
       <div className="footer-inner">
         <div className="footer-brand">
           <button className="wordmark" onClick={() => go('/')}>
@@ -608,16 +717,16 @@ function PublicFooter({ go }: Readonly<{ go: Go }>) {
           <button onClick={() => go('/start')}>Start Here</button>
         </nav>
         <div className="footer-right">
-          <button className="primary small" onClick={() => go('/book')}>
-            Book a Consultation
+          <button className="text-btn-small" onClick={onStartTour}>
+            <Compass size={13} /> Take the 3-minute tour
           </button>
           <button className="footer-os-link" onClick={() => go('/admin')}>
-            Business OS demo <ArrowUpRight size={13} />
+            Optional add-on: Business OS demo <ArrowUpRight size={13} />
           </button>
         </div>
       </div>
       <div className="footer-base">
-        <span>© 2026 Mehjabin Badhon. Let's Talk Business.</span>
+        <span>&copy; 2026 Mehjabin Badhon. Let's Talk Business.</span>
         <span>Dhaka, Bangladesh · GMT+6</span>
       </div>
     </footer>

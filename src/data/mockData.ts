@@ -1,3 +1,11 @@
+import { addDays, dateOnlyLabel, isoDate, longDayLabel } from '../lib/dates'
+
+const now = new Date()
+const d = (n: number) => addDays(now, n)
+const dISO = (n: number) => isoDate(d(n))
+const dLabel = (n: number) => dateOnlyLabel(d(n))
+const dLong = (n: number) => longDayLabel(d(n))
+
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 
 export type Idea = {
@@ -12,6 +20,9 @@ export type Article = Idea & {
   slug: string
   readTime: string
   body: string[]
+  pullQuote: string
+  note?: string
+  isDemo?: boolean
 }
 
 export type Service = {
@@ -24,6 +35,8 @@ export type Service = {
   cta: string
 }
 
+export type LeadStatus = 'NEW' | 'CONTACTED' | 'DISCOVERY' | 'PROPOSAL' | 'WON' | 'ACTIVE CLIENT' | 'COMPLETED'
+
 export type Lead = {
   id: string
   name: string
@@ -34,16 +47,15 @@ export type Lead = {
   source: string
   service: string
   requirement: string
-  status: 'NEW' | 'CONTACTED' | 'DISCOVERY' | 'PROPOSAL' | 'WON' | 'ACTIVE CLIENT' | 'COMPLETED'
+  status: LeadStatus
   notes: string
-  next: string
-  nextDate: string
   createdAt: string
   isDemo: boolean
 }
 
 export type Client = {
   id: string
+  leadId?: string
   name: string
   company: string
   role: string
@@ -53,9 +65,6 @@ export type Client = {
   status: 'ACTIVE' | 'COMPLETED' | 'ON HOLD'
   timeline: { event: string; date: string; note?: string }[]
   notes: string
-  nextAction: string
-  nextActionDate: string
-  upcomingSessions: { title: string; date: string; time: string }[]
   isDemo: boolean
 }
 
@@ -64,12 +73,28 @@ export type Session = {
   clientName: string
   company: string
   service: string
+  dateISO: string
   date: string
   time: string
   type: 'Discovery' | 'Strategy' | 'Advisory' | 'Review' | 'Follow-up'
   status: 'Upcoming' | 'Completed' | 'Cancelled'
   isDemo: boolean
 }
+
+export type Task = {
+  id: string
+  title: string
+  relatedType: 'lead' | 'client'
+  relatedId: string
+  relatedName: string
+  company: string
+  dueISO: string
+  dueLabel: string
+  done: boolean
+  isDemo: boolean
+}
+
+export type ContentStatus = 'IDEA' | 'DRAFT' | 'REVIEW' | 'READY' | 'PUBLISHED'
 
 export type ContentItem = {
   id: string
@@ -78,124 +103,117 @@ export type ContentItem = {
   category: string
   platform: string
   body: string
+  media: string
   publishDate: string
-  status: 'IDEA' | 'DRAFT' | 'REVIEW' | 'READY' | 'PUBLISHED'
+  status: ContentStatus
   isDemo: boolean
 }
 
-export type AnalyticsData = {
-  websiteVisitors: { label: string; value: number }[]
-  topIdeas: { title: string; views: number; category: string }[]
-  inquiries: { label: string; value: number }[]
-  sources: { label: string; value: number; pct: number }[]
-  conversion: { stage: string; count: number }[]
+export type ActivityTag = 'NEW' | 'BOOKING' | 'CONTENT' | 'PROPOSAL' | 'WON' | 'CLIENT' | 'SESSION'
+
+export type ActivityEntry = {
+  id: string
+  tag: ActivityTag
+  text: string
+  dateISO: string
+  isDemo: boolean
 }
 
-// ─── IDEAS ────────────────────────────────────────────────────────────────────
+export type TrustedByEntry = {
+  name: string
+  role: string
+  years: string
+  logo?: string
+  logoKind: 'image' | 'wordmark'
+}
 
-export const ideas: Idea[] = [
+export type TimelineEntry = {
+  year: string
+  role: string
+  org: string
+  note: string
+}
+
+// ─── IDEAS & ARTICLES ─────────────────────────────────────────────────────────
+// Grounded in Mehjabin's real, public topics: the bKash friction story, the
+// customer decision-making tree and CLV from her 2022 training, omnipresence
+// and neuromarketing from her LinkedIn writing.
+
+export const articles: Article[] = [
   {
-    title: 'The customer is not a segment on a slide',
+    title: 'What two minutes with bKash taught me about product design',
     category: 'Customer',
-    excerpt: 'A better way to use customer understanding as a strategic discipline — not a research afterthought.',
-    date: '12 September 2026',
-    type: 'Article',
-  },
-  {
-    title: 'Growth starts before the marketing plan',
-    category: 'Growth',
-    excerpt: 'The clarity questions leadership teams should answer before asking for more campaigns.',
-    date: '28 August 2026',
     type: 'Insight',
+    excerpt: 'It took two years to open a savings account the old way. It took two minutes on a phone. The gap between those numbers is the whole argument for customer-first design.',
+    date: dLabel(-16),
+    slug: 'two-minutes-with-bkash',
+    readTime: '4 min read',
+    pullQuote: 'A product does one of two things: it solves a problem, or it makes a customer’s life better. Everything else is decoration.',
+    note: 'Sample essay drafted for this prototype, based on a public post by Mehjabin on LinkedIn.',
+    body: [
+      'For two years, opening a savings account meant a trip to a branch, a stack of paperwork and a queue that ate an afternoon. Then, on an ordinary day, I did the same thing on my phone in under two minutes.',
+      'Three things had stood in the way before: the inconvenience of travelling somewhere, the hassle of documentation, and the small daily irritation of dealing with an institution that made you feel like a case number. None of those barriers were about the product itself. They were about everything wrapped around it.',
+      'This is not a story about a banking app. It is a story about where value actually gets created. A business can have a good product and still lose customers to friction it never bothered to measure — the travel, the waiting, the forms, the tone of the person behind the counter.',
+      'The businesses that win the next decade in Bangladesh will not necessarily have the best product on a spec sheet. They will be the ones that keep asking what is standing between a customer and the thing they are trying to do — and then quietly remove it.',
+    ],
   },
   {
-    title: 'What Bangladesh businesses can learn from listening',
-    category: 'Bangladesh Business',
-    excerpt: 'Practical signals hiding in the everyday experiences customers already share with us.',
-    date: '04 August 2026',
-    type: 'Talk',
-  },
-  {
-    title: 'Strategy that people can actually use',
+    title: 'The customer decision-making tree, and why most strategy skips it',
     category: 'Strategy',
-    excerpt: 'Why the best strategy has to make sense on Monday morning, not only in the boardroom.',
-    date: '21 July 2026',
-    type: 'Video',
+    type: 'Article',
+    excerpt: 'Before a strategy document gets written, most teams should be able to draw the path a customer actually takes to say yes. Most can’t.',
+    date: dLabel(-31),
+    slug: 'customer-decision-making-tree',
+    readTime: '5 min read',
+    pullQuote: 'If you can’t draw how a customer decides, you’re not ready to decide what to do about it.',
+    body: [
+      'In a full-day training I ran on customer analytics, the exercise that stopped the room every time was the simplest one: draw the decision-making tree. Not the funnel from your dashboard — the actual sequence of small decisions a real customer works through before they buy anything from you.',
+      'Most teams can describe their customer in a sentence. Fewer can describe the branching points: the moment of awareness, the comparison, the hesitation, the trigger that finally moves someone from considering to committing. Those branches are where strategy actually happens, not in the boardroom.',
+      'This matters because strategy built without the tree tends to optimise for the wrong branch. A team convinced their problem is awareness will pour money into ads, when the real leak is at the comparison stage, where a competitor’s simpler pricing page is quietly winning.',
+      'Good strategy starts with the tree, not the target. Map how the decision actually gets made, and the priorities tend to declare themselves.',
+    ],
+  },
+  {
+    title: 'Customer lifetime value is a strategy question, not a finance one',
+    category: 'Growth',
+    type: 'Insight',
+    excerpt: 'Most businesses treat CLV as a number for the finance team. It’s really a test of whether your strategy earns loyalty or just transactions.',
+    date: dLabel(-53),
+    slug: 'customer-lifetime-value-is-strategy',
+    readTime: '5 min read',
+    pullQuote: 'A high customer lifetime value is not a metric. It is evidence that a business kept a promise more than once.',
+    body: [
+      'Customer lifetime value gets treated as a spreadsheet exercise — a formula, a cohort chart, a number to report upward. That framing misses what the number is actually telling you.',
+      'CLV is a report card on whether your strategy creates reasons to come back, or simply reasons to show up once. A business can hit its acquisition targets every quarter and still be a leaking bucket if nothing after the first purchase gives a customer a reason to return.',
+      'In practice, the businesses with strong CLV rarely have a single retention tactic. They have a strategy where the product, the service and the follow-through all point toward the same promise, so a second purchase feels obvious rather than incentivised.',
+      'If you want to grow lifetime value, do not start with a loyalty programme. Start by asking what would make a customer’s second decision easier than their first.',
+    ],
+  },
+  {
+    title: 'Omnipresence: what "being everywhere" actually requires',
+    category: 'Bangladesh Business',
+    type: 'Talk',
+    excerpt: 'Omnichannel is not the same as omnipresent. One means you exist in many places. The other means a customer barely notices moving between them.',
+    date: dLabel(-72),
+    slug: 'omnipresence-being-everywhere',
+    readTime: '6 min read',
+    pullQuote: 'Being everywhere is not a channel strategy. It is a promise that the customer never has to start over.',
+    body: [
+      'Every retail business I have worked with wants to be omnichannel — present in-store, online, on a delivery app, on social. Most manage the presence. Few manage the promise underneath it: that a customer can move between those channels without feeling like they have started a new relationship each time.',
+      'In a market like Bangladesh, where a customer might discover a brand on Facebook, ask a question over WhatsApp, and complete the purchase in a physical store, omnipresence is not a nice-to-have. It is the only way the customer experience actually holds together.',
+      'The businesses that get this right treat every channel as one continuous conversation, not a set of separate storefronts competing for the same budget line. A support answer given on one channel should be visible on the next. A cart should not reset because a customer switched from an app to a shop.',
+      'Omnipresence is not about adding more channels. It is about removing the seams between the ones you already have.',
+    ],
   },
   {
     title: 'Why neuromarketing changes how we think about buying decisions',
     category: 'Marketing',
-    excerpt: 'Planned versus impulse: what the brain tells us about how customers actually decide — and what that means for strategy.',
-    date: '10 July 2026',
     type: 'Article',
-  },
-  {
-    title: 'The leader who listens differently',
-    category: 'Leadership',
-    excerpt: 'Curiosity is the most underrated strategic capacity in a leadership team.',
-    date: '02 July 2026',
-    type: 'Insight',
-  },
-  {
-    title: 'Business in a decade of disruption',
-    category: 'Future',
-    excerpt: 'The organisations that will survive the next decade are already practising something most teams ignore.',
-    date: '18 June 2026',
-    type: 'Talk',
-  },
-]
-
-// ─── ARTICLES ─────────────────────────────────────────────────────────────────
-
-export const articles: Article[] = [
-  {
-    ...ideas[0],
-    slug: 'customer-is-not-a-segment',
-    readTime: '4 min read',
-    body: [
-      'Customer segments are useful. They help us organise a complex world and make decisions at scale. But they are a starting point, not the whole story.',
-      'The question is not simply who customers are. It is what they are trying to do, what gets in their way, and what they wish a business understood about their lives.',
-      'When a business reduces its customers to a demographic group on a slide, it loses the texture that makes insight actionable. A 28–35 year old urban professional is not a person. A parent who commutes 90 minutes each day and shops online because it is the only quiet time she has — that is a person.',
-      'The businesses that make room for this kind of listening are better placed to create relevance. And relevance is where lasting growth begins.',
-    ],
-  },
-  {
-    ...ideas[1],
-    slug: 'growth-starts-before-the-marketing-plan',
-    readTime: '5 min read',
-    body: [
-      'Growth asks more of a business than a louder marketing plan. It asks for clarity about where value is created, protected and repeated.',
-      'Before choosing tactics, leadership teams need a shared understanding of the customer behaviour they are trying to earn. Which problem are we genuinely the best answer to? Which customers have we earned the right to serve? What would make them stay?',
-      'These questions feel uncomfortable in a budget meeting. But skipping them is what turns marketing spend into noise rather than signal.',
-      'The businesses I admire most are not the loudest. They are the ones that know exactly who they exist for — and make every decision accordingly.',
-    ],
-  },
-  {
-    ...ideas[2],
-    slug: 'what-listening-teaches-business',
-    readTime: '6 min read',
-    body: [
-      'Bangladesh has one of the most energetic and adaptive business cultures in the region. Entrepreneurs here learn fast, iterate quickly, and operate in conditions that would stop many Western businesses entirely.',
-      'But there is a gap. Many of the businesses I have worked with have remarkable instincts about what their customers want — and very few structured ways to confirm or challenge those instincts.',
-      'The everyday experiences customers share are not background noise. They are often the most useful evidence a business has. A complaint logged in a call centre, a pattern in cart abandonments, a recurring topic in social comments — these are signals, not noise.',
-      'Listening is not a ritual at the end of a project. It is part of how a business learns to stay relevant.',
-    ],
-  },
-  {
-    ...ideas[3],
-    slug: 'strategy-people-can-use',
-    readTime: '4 min read',
-    body: [
-      'The best strategy I have seen is rarely the most sophisticated. It is the one that a team can actually explain on a Monday morning.',
-      'Strategic planning has a tendency to produce documents that live in shared drives and die in the first quarter. The reason is almost always the same: the plan was built for the boardroom, not for the people who have to carry it.',
-      'Useful strategy answers three things clearly: what we are choosing to do, what we are choosing not to do, and why those choices will matter to the people we serve.',
-      'Simplicity in strategy is not a dumbing-down. It is a discipline.',
-    ],
-  },
-  {
-    ...ideas[4],
+    excerpt: 'Planned versus impulse: what the brain tells us about how customers actually decide — and what that means for strategy.',
+    date: dLabel(-91),
     slug: 'neuromarketing-buying-decisions',
     readTime: '6 min read',
+    pullQuote: 'Getting a customer’s emotional moment right is not manipulation — it is a form of respect for how human beings actually work.',
     body: [
       'For decades, marketing assumed that customers make decisions rationally — weighing options, comparing prices, selecting the best value. Neuromarketing has shown us something more interesting: most decisions happen before conscious reasoning even begins.',
       'The distinction between planned and impulse purchasing is not simply a question of product category or price point. It is a question of emotional state, environmental cue, and the relationship a customer already has with a brand.',
@@ -204,9 +222,14 @@ export const articles: Article[] = [
     ],
   },
   {
-    ...ideas[5],
+    title: 'The leader who listens differently',
+    category: 'Leadership',
+    type: 'Insight',
+    excerpt: 'Curiosity is the most underrated strategic capacity in a leadership team.',
+    date: dLabel(-112),
     slug: 'leader-who-listens-differently',
     readTime: '4 min read',
+    pullQuote: 'The organisations that outlast the rest are almost always led by people who stayed curious long after they had every reason to become certain.',
     body: [
       'The leaders who have most shaped the way I think about business share something that is easy to overlook: they are genuinely curious about being wrong.',
       'Curiosity is often framed as a personality trait — something you either have or you do not. I think that misses the point. Curiosity in a leadership context is a strategic behaviour. It is the discipline of asking useful questions before reaching for familiar answers.',
@@ -215,9 +238,14 @@ export const articles: Article[] = [
     ],
   },
   {
-    ...ideas[6],
+    title: 'Business in a decade of disruption',
+    category: 'Future',
+    type: 'Talk',
+    excerpt: 'The organisations that will survive the next decade are already practising something most teams ignore.',
+    date: dLabel(-129),
     slug: 'business-decade-of-disruption',
     readTime: '5 min read',
+    pullQuote: 'In a decade of disruption, the most durable strategic advantage is a business that genuinely understands the people it serves.',
     body: [
       'Every industry conversation eventually arrives at the same word: disruption. The platforms, the AI, the shifting demographics, the post-pandemic consumer — all of it collides into a sense that everything is about to change.',
       'Some of it will. Some of it already has. But the businesses I have watched navigate disruption well share a pattern that is almost anti-disruptive in its logic: they went deeper into customer understanding precisely when their competitors were chasing the next trend.',
@@ -226,6 +254,28 @@ export const articles: Article[] = [
     ],
   },
 ]
+
+export const ideas: Idea[] = articles.map(({ title, category, excerpt, date, type }) => ({ title, category, excerpt, date, type }))
+
+/** Turns a Content Studio item into something the public Ideas library can render. */
+export function contentToArticle(item: ContentItem): Article {
+  const paragraphs = item.body.split('\n\n').filter(Boolean)
+  const firstLine = paragraphs[0] ?? item.topic
+  const wordCount = paragraphs.join(' ').split(/\s+/).filter(Boolean).length
+  return {
+    title: item.title,
+    category: item.category,
+    type: 'Insight',
+    excerpt: firstLine.length > 160 ? `${firstLine.slice(0, 157)}…` : firstLine,
+    date: item.publishDate || 'Recently published',
+    slug: `demo-${item.id}`,
+    readTime: `${Math.max(1, Math.round(wordCount / 200))} min read`,
+    pullQuote: paragraphs[1] ?? firstLine,
+    note: 'Published from the Content Studio demo — not one of Mehjabin’s verified public essays.',
+    body: paragraphs.length > 0 ? paragraphs : [item.topic],
+    isDemo: true,
+  }
+}
 
 // ─── SERVICES ─────────────────────────────────────────────────────────────────
 
@@ -286,92 +336,119 @@ export const services: Service[] = [
   },
 ]
 
+// ─── TRUSTED BY / CAREER (all real, sourced facts) ───────────────────────────
+
+export const trustedBy: TrustedByEntry[] = [
+  { name: "Let's Talk Business", role: 'Founder & Growth Lead', years: '2025 — Present', logo: '/logos/letstalk-business.png', logoKind: 'image' },
+  { name: 'ACI Logistics · Shwapno', role: 'Head of Customer Analytics & CRM', years: '2018 — 2022', logoKind: 'wordmark' },
+  { name: 'Grameenphone', role: 'Intern', years: '2014', logo: '/logos/grameenphone-mark.svg', logoKind: 'image' },
+  { name: 'RSPL BD Ltd', role: 'Marketing Specialist', years: '2017 — 2018', logoKind: 'wordmark' },
+]
+
+export const careerTimeline: TimelineEntry[] = [
+  {
+    year: '2014',
+    role: 'Intern',
+    org: 'Grameenphone',
+    note: 'Started inside one of the country’s largest customer bases — an early lesson in how systems, not individuals, decide most customer experiences.',
+  },
+  {
+    year: '2017 — 2018',
+    role: 'Marketing Specialist',
+    org: 'RSPL BD Ltd',
+    note: 'Moved from customer systems to customer communication, and saw how often the two are planned by teams that never talk to each other.',
+  },
+  {
+    year: '2018 — 2022',
+    role: 'Head of Customer Analytics, Process Innovation & Store Strategy',
+    org: 'ACI Logistics Ltd · Shwapno',
+    note: 'Ran customer analytics and store strategy for one of Bangladesh’s largest retail chains, where a decision-making tree could be tested against thousands of real transactions a day.',
+  },
+  {
+    year: '2025 — Present',
+    role: 'Founder & Growth Lead',
+    org: "Let's Talk Business",
+    note: 'Now works directly with founders and teams who want the same customer-first thinking, without needing a retail chain to test it on.',
+  },
+]
+
 // ─── LEADS ────────────────────────────────────────────────────────────────────
+// Fictional companies on .example addresses (RFC 2606) — no real business implied.
 
 export const seedLeads: Lead[] = [
   {
     id: 'lead-001',
     name: 'Tania Rahman',
-    company: 'Noksha Foods',
+    company: 'Nodi Textiles',
     role: 'CEO',
     phone: '+880 1711-234567',
-    email: 'tania@noksha.com.bd',
+    email: 'tania@nodi-textiles.example',
     source: 'LinkedIn',
     service: 'Growth Strategy',
     requirement: 'Looking to expand into new product categories and need strategic clarity before investing.',
     status: 'DISCOVERY',
     notes: 'Very clear about what she wants. Has budget confirmed. Eager to move fast.',
-    next: 'Discovery call — confirm scope and timeline',
-    nextDate: 'Thu, 25 Sep · 11:00 AM',
-    createdAt: '18 Sep 2026',
+    createdAt: dLabel(-6),
     isDemo: true,
   },
   {
     id: 'lead-002',
     name: 'Sharmeen Kabir',
-    company: 'The Loom Studio',
+    company: 'Projapoti Studio',
     role: 'Founder',
     phone: '+880 1812-345678',
-    email: 'sharmeen@theloomstudio.com',
+    email: 'sharmeen@projapotistudio.example',
     source: 'Website',
     service: 'Business Strategy',
-    requirement: 'New business struggling to define its market position. First-time founder needing strategic thinking partner.',
+    requirement: 'New business struggling to define its market position. First-time founder needing a strategic thinking partner.',
     status: 'NEW',
-    notes: 'Found the website via Google. Sent inquiry form. Has not replied to welcome email yet.',
-    next: 'Reply to inquiry email',
-    nextDate: 'Today',
-    createdAt: '20 Sep 2026',
+    notes: 'Found the website via Google. Sent inquiry form. Has not replied to the welcome email yet.',
+    createdAt: dLabel(-4),
     isDemo: true,
   },
   {
     id: 'lead-003',
     name: 'Arif Hossain',
-    company: 'Pathao Retail',
+    company: 'Dhaka Loop Retail',
     role: 'Head of Strategy',
     phone: '+880 1923-456789',
-    email: 'arif.h@pathao.com',
+    email: 'arif@dhakaloopretail.example',
     source: 'Referral',
     service: 'Customer & Market Insights',
     requirement: 'Need deep customer research to understand drop-off in repeat purchase behaviour post-delivery.',
     status: 'PROPOSAL',
-    notes: 'Referred by a previous client. High quality lead. Decision maker confirmed. Proposal sent 19 Sep.',
-    next: 'Follow up on proposal — decision by Friday',
-    nextDate: 'Fri, 26 Sep',
-    createdAt: '15 Sep 2026',
+    notes: 'Referred by a previous client. High quality lead. Decision maker confirmed. Proposal sent.',
+    createdAt: dLabel(-9),
     isDemo: true,
   },
   {
     id: 'lead-004',
     name: 'Dilruba Akter',
-    company: 'ShajGhor',
+    company: 'Charulata Foods',
     role: 'Co-Founder',
     phone: '+880 1634-567890',
-    email: 'dilruba@shajghor.com',
+    email: 'dilruba@charulatafoods.example',
     source: 'Facebook',
     service: 'Workshops & Training',
     requirement: 'Team of 12 needs a customer-centred thinking workshop. Would like a half-day format.',
     status: 'CONTACTED',
-    notes: 'Responded well to first email. Waiting for internal budget approval.',
-    next: 'Send workshop proposal and pricing',
-    nextDate: 'Mon, 29 Sep',
-    createdAt: '12 Sep 2026',
+    notes: 'Responded well to the first email. Waiting on internal budget approval.',
+    createdAt: dLabel(-12),
     isDemo: true,
   },
   {
     id: 'lead-005',
     name: 'Rezaul Karim',
-    company: 'Meghna Group',
+    company: 'Shonar Bangla Ventures',
     role: 'Director, New Business',
     phone: '+880 1745-678901',
-    email: 'rkarim@meghnagroup.com',
+    email: 'rkarim@sbventures.example',
     source: 'Speaking event',
     service: 'Speaking',
     requirement: 'Annual leadership conference, 400 attendees. Looking for a keynote on customer-led growth.',
     status: 'WON',
-    notes: 'Confirmed. Event on 15 November. Brief received.',
-    next: 'Draft keynote outline and share for approval',
-    nextDate: 'Wed, 01 Oct',
-    createdAt: '05 Sep 2026',
+    notes: 'Confirmed. Brief received.',
+    createdAt: dLabel(-19),
     isDemo: true,
   },
 ]
@@ -382,68 +459,59 @@ export const seedClients: Client[] = [
   {
     id: 'client-001',
     name: 'Fariha Chowdhury',
-    company: 'Aarong (BRAC)',
+    company: 'Anko Media',
     role: 'Head of Customer Experience',
-    email: 'f.chowdhury@aarong.com',
+    email: 'f.chowdhury@ankomedia.example',
     phone: '+880 1811-100200',
     service: 'Customer & Market Insights',
     status: 'ACTIVE',
     timeline: [
-      { event: 'Inquiry received', date: '10 Aug 2026' },
-      { event: 'Discovery session', date: '18 Aug 2026', note: 'Discussed scope — focus on urban millennials and gift purchasing behaviour' },
-      { event: 'Proposal accepted', date: '25 Aug 2026' },
-      { event: 'Research session 1', date: '05 Sep 2026', note: 'Customer interview series began — 12 interviews completed' },
-      { event: 'Research session 2', date: '15 Sep 2026', note: 'Synthesis and pattern identification' },
+      { event: 'Inquiry received', date: dLabel(-45) },
+      { event: 'Discovery session', date: dLabel(-37), note: 'Discussed scope — focus on urban millennials and gift purchasing behaviour' },
+      { event: 'Proposal accepted', date: dLabel(-30) },
+      { event: 'Research session 1', date: dLabel(-19), note: 'Customer interview series began — 12 interviews completed' },
+      { event: 'Research session 2', date: dLabel(-9), note: 'Synthesis and pattern identification' },
     ],
     notes: 'Strong working relationship. Client is highly engaged and participates actively in research reviews. Wants monthly follow-ups.',
-    nextAction: 'Deliver insights report and present findings',
-    nextActionDate: 'Wed, 01 Oct · 2:00 PM',
-    upcomingSessions: [{ title: 'Insights Presentation', date: '01 Oct 2026', time: '2:00 PM' }],
     isDemo: true,
   },
   {
     id: 'client-002',
     name: 'Nusrat Jahan',
-    company: 'Shokhi Homemade',
+    company: 'Moyna Home & Craft',
     role: 'Founder',
-    email: 'nusrat@shokhihomemade.com',
+    email: 'nusrat@moynahomecraft.example',
     phone: '+880 1712-300400',
     service: '1:1 Advisory',
     status: 'ACTIVE',
     timeline: [
-      { event: 'Inquiry received', date: '01 Aug 2026' },
-      { event: 'Discovery call', date: '08 Aug 2026', note: 'Exploring pricing strategy and brand positioning for scaling' },
-      { event: 'Advisory retainer agreed', date: '14 Aug 2026' },
-      { event: 'Session 1', date: '22 Aug 2026' },
-      { event: 'Session 2', date: '05 Sep 2026' },
-      { event: 'Session 3', date: '19 Sep 2026' },
+      { event: 'Inquiry received', date: dLabel(-54) },
+      { event: 'Discovery call', date: dLabel(-47), note: 'Exploring pricing strategy and brand positioning for scaling' },
+      { event: 'Advisory retainer agreed', date: dLabel(-41) },
+      { event: 'Session 1', date: dLabel(-33) },
+      { event: 'Session 2', date: dLabel(-19) },
+      { event: 'Session 3', date: dLabel(-5) },
     ],
     notes: 'Monthly 90-minute advisory sessions. Currently working through pricing architecture and channel strategy.',
-    nextAction: 'Session 4 — review pricing decisions and distribution plan',
-    nextActionDate: 'Fri, 03 Oct · 10:30 AM',
-    upcomingSessions: [{ title: 'Advisory Session 4', date: '03 Oct 2026', time: '10:30 AM' }],
     isDemo: true,
   },
   {
     id: 'client-003',
     name: 'Kamrul Islam',
-    company: 'Dhaka Tribune (Digital)',
+    company: 'Kagoj Digital',
     role: 'Head of Product',
-    email: 'k.islam@dhakatribune.com',
+    email: 'k.islam@kagojdigital.example',
     phone: '+880 1923-500600',
     service: 'Business Strategy',
     status: 'COMPLETED',
     timeline: [
-      { event: 'Inquiry received', date: '05 Jun 2026' },
-      { event: 'Discovery', date: '12 Jun 2026' },
-      { event: 'Strategy workshop', date: '26 Jun 2026' },
-      { event: 'Strategy report delivered', date: '15 Jul 2026' },
-      { event: 'Follow-up review', date: '01 Aug 2026', note: 'All recommendations reviewed, implementation roadmap agreed' },
+      { event: 'Inquiry received', date: dLabel(-110) },
+      { event: 'Discovery', date: dLabel(-103) },
+      { event: 'Strategy workshop', date: dLabel(-89) },
+      { event: 'Strategy report delivered', date: dLabel(-68) },
+      { event: 'Follow-up review', date: dLabel(-52), note: 'All recommendations reviewed, implementation roadmap agreed' },
     ],
     notes: 'Engagement complete. Client is happy. Asked about future work on audience research. Keep warm.',
-    nextAction: 'Send quarterly check-in',
-    nextActionDate: 'Oct 2026',
-    upcomingSessions: [],
     isDemo: true,
   },
 ]
@@ -451,65 +519,71 @@ export const seedClients: Client[] = [
 // ─── SESSIONS ─────────────────────────────────────────────────────────────────
 
 export const seedSessions: Session[] = [
-  { id: 's-001', clientName: 'Fariha Chowdhury', company: 'Aarong', service: 'Insights Presentation', date: '01 Oct 2026', time: '2:00 PM', type: 'Review', status: 'Upcoming', isDemo: true },
-  { id: 's-002', clientName: 'Nusrat Jahan', company: 'Shokhi Homemade', service: 'Advisory Session 4', date: '03 Oct 2026', time: '10:30 AM', type: 'Advisory', status: 'Upcoming', isDemo: true },
-  { id: 's-003', clientName: 'Rezaul Karim', company: 'Meghna Group', service: 'Keynote Brief Review', date: '01 Oct 2026', time: '4:00 PM', type: 'Strategy', status: 'Upcoming', isDemo: true },
-  { id: 's-004', clientName: 'Fariha Chowdhury', company: 'Aarong', service: 'Research Session 2', date: '15 Sep 2026', time: '2:00 PM', type: 'Discovery', status: 'Completed', isDemo: true },
-  { id: 's-005', clientName: 'Nusrat Jahan', company: 'Shokhi Homemade', service: 'Advisory Session 3', date: '19 Sep 2026', time: '10:30 AM', type: 'Advisory', status: 'Completed', isDemo: true },
+  { id: 's-001', clientName: 'Tania Rahman', company: 'Nodi Textiles', service: 'Discovery Call', dateISO: dISO(0), date: dLong(0), time: '11:00 AM', type: 'Discovery', status: 'Upcoming', isDemo: true },
+  { id: 's-002', clientName: 'Fariha Chowdhury', company: 'Anko Media', service: 'Insights Presentation', dateISO: dISO(7), date: dLong(7), time: '2:00 PM', type: 'Review', status: 'Upcoming', isDemo: true },
+  { id: 's-003', clientName: 'Nusrat Jahan', company: 'Moyna Home & Craft', service: 'Advisory Session 4', dateISO: dISO(9), date: dLong(9), time: '10:30 AM', type: 'Advisory', status: 'Upcoming', isDemo: true },
+  { id: 's-004', clientName: 'Rezaul Karim', company: 'Shonar Bangla Ventures', service: 'Keynote Brief Review', dateISO: dISO(7), date: dLong(7), time: '4:00 PM', type: 'Strategy', status: 'Upcoming', isDemo: true },
+  { id: 's-005', clientName: 'Fariha Chowdhury', company: 'Anko Media', service: 'Research Session 2', dateISO: dISO(-9), date: dLong(-9), time: '2:00 PM', type: 'Discovery', status: 'Completed', isDemo: true },
+  { id: 's-006', clientName: 'Nusrat Jahan', company: 'Moyna Home & Craft', service: 'Advisory Session 3', dateISO: dISO(-5), date: dLong(-5), time: '10:30 AM', type: 'Advisory', status: 'Completed', isDemo: true },
+]
+
+// ─── TASKS ────────────────────────────────────────────────────────────────────
+
+export const seedTasks: Task[] = [
+  { id: 'task-001', title: 'Confirm discovery call scope and timeline', relatedType: 'lead', relatedId: 'lead-001', relatedName: 'Tania Rahman', company: 'Nodi Textiles', dueISO: dISO(0), dueLabel: dLabel(0), done: false, isDemo: true },
+  { id: 'task-002', title: 'Reply to inquiry email', relatedType: 'lead', relatedId: 'lead-002', relatedName: 'Sharmeen Kabir', company: 'Projapoti Studio', dueISO: dISO(0), dueLabel: dLabel(0), done: false, isDemo: true },
+  { id: 'task-003', title: 'Follow up on proposal — decision expected', relatedType: 'lead', relatedId: 'lead-003', relatedName: 'Arif Hossain', company: 'Dhaka Loop Retail', dueISO: dISO(2), dueLabel: dLabel(2), done: false, isDemo: true },
+  { id: 'task-004', title: 'Send workshop proposal and pricing', relatedType: 'lead', relatedId: 'lead-004', relatedName: 'Dilruba Akter', company: 'Charulata Foods', dueISO: dISO(5), dueLabel: dLabel(5), done: false, isDemo: true },
+  { id: 'task-005', title: 'Draft keynote outline and share for approval', relatedType: 'lead', relatedId: 'lead-005', relatedName: 'Rezaul Karim', company: 'Shonar Bangla Ventures', dueISO: dISO(3), dueLabel: dLabel(3), done: false, isDemo: true },
+  { id: 'task-006', title: 'Deliver insights report and present findings', relatedType: 'client', relatedId: 'client-001', relatedName: 'Fariha Chowdhury', company: 'Anko Media', dueISO: dISO(7), dueLabel: dLabel(7), done: false, isDemo: true },
+  { id: 'task-007', title: 'Session 4 — review pricing decisions and distribution plan', relatedType: 'client', relatedId: 'client-002', relatedName: 'Nusrat Jahan', company: 'Moyna Home & Craft', dueISO: dISO(9), dueLabel: dLabel(9), done: false, isDemo: true },
+  { id: 'task-008', title: 'Send quarterly check-in', relatedType: 'client', relatedId: 'client-003', relatedName: 'Kamrul Islam', company: 'Kagoj Digital', dueISO: dISO(14), dueLabel: dLabel(14), done: false, isDemo: true },
 ]
 
 // ─── CONTENT ──────────────────────────────────────────────────────────────────
 
 export const seedContent: ContentItem[] = [
-  { id: 'c-001', title: 'The customer is not a segment on a slide', topic: 'Customer understanding', category: 'Customer', platform: 'Website / LinkedIn', body: '', publishDate: '12 Sep 2026', status: 'PUBLISHED', isDemo: true },
-  { id: 'c-002', title: 'Growth starts before the marketing plan', topic: 'Growth strategy', category: 'Growth', platform: 'Website / LinkedIn', body: '', publishDate: '28 Aug 2026', status: 'PUBLISHED', isDemo: true },
-  { id: 'c-003', title: 'What Bangladesh businesses can learn from listening', topic: 'Bangladesh business', category: 'Bangladesh Business', platform: 'Website / Facebook', body: '', publishDate: '04 Aug 2026', status: 'PUBLISHED', isDemo: true },
-  { id: 'c-004', title: 'Why neuromarketing changes how we think about buying decisions', topic: 'Neuromarketing / consumer behaviour', category: 'Marketing', platform: 'Website / LinkedIn', body: '', publishDate: '10 Jul 2026', status: 'PUBLISHED', isDemo: true },
-  { id: 'c-005', title: 'The leader who listens differently', topic: 'Leadership and curiosity', category: 'Leadership', platform: 'LinkedIn', body: '', publishDate: '02 Jul 2026', status: 'PUBLISHED', isDemo: true },
-  { id: 'c-006', title: 'Business in a decade of disruption', topic: 'Future of business', category: 'Future', platform: 'Website / Talk', body: '', publishDate: '18 Jun 2026', status: 'PUBLISHED', isDemo: true },
-  { id: 'c-007', title: 'Why customer feedback is not the same as customer understanding', topic: 'Research methodology', category: 'Customer', platform: 'Website', body: 'Draft in progress...', publishDate: '', status: 'DRAFT', isDemo: true },
-  { id: 'c-008', title: 'The 3 questions a growth strategy must answer', topic: 'Growth frameworks', category: 'Growth', platform: 'LinkedIn / Website', body: '', publishDate: '', status: 'REVIEW', isDemo: true },
-  { id: 'c-009', title: 'How Bangladeshi brands can compete on customer experience', topic: 'Bangladesh CX', category: 'Bangladesh Business', platform: 'Website / Facebook', body: '', publishDate: '', status: 'READY', isDemo: true },
-  { id: 'c-010', title: 'What I wish I had known about strategy at the start', topic: 'Career lessons', category: 'Leadership', platform: 'LinkedIn', body: '', publishDate: '', status: 'IDEA', isDemo: true },
-  { id: 'c-011', title: 'The impulse purchase — and what it tells us about trust', topic: 'Consumer behaviour', category: 'Marketing', platform: 'Website', body: '', publishDate: '', status: 'IDEA', isDemo: true },
+  { id: 'c-001', title: 'What two minutes with bKash taught me about product design', topic: 'Customer-first product design', category: 'Customer', platform: 'Website / LinkedIn', body: '', media: '', publishDate: dLabel(-16), status: 'PUBLISHED', isDemo: true },
+  { id: 'c-002', title: 'The customer decision-making tree, and why most strategy skips it', topic: 'Customer decision-making', category: 'Strategy', platform: 'Website / LinkedIn', body: '', media: '', publishDate: dLabel(-31), status: 'PUBLISHED', isDemo: true },
+  { id: 'c-003', title: 'Customer lifetime value is a strategy question, not a finance one', topic: 'CLV & growth strategy', category: 'Growth', platform: 'Website / LinkedIn', body: '', media: '', publishDate: dLabel(-53), status: 'PUBLISHED', isDemo: true },
+  { id: 'c-004', title: 'Omnipresence: what "being everywhere" actually requires', topic: 'Omnichannel retail', category: 'Bangladesh Business', platform: 'Website / Talk', body: '', media: '', publishDate: dLabel(-72), status: 'PUBLISHED', isDemo: true },
+  { id: 'c-005', title: 'Why neuromarketing changes how we think about buying decisions', topic: 'Neuromarketing / consumer behaviour', category: 'Marketing', platform: 'Website / LinkedIn', body: '', media: '', publishDate: dLabel(-91), status: 'PUBLISHED', isDemo: true },
+  { id: 'c-006', title: 'The leader who listens differently', topic: 'Leadership and curiosity', category: 'Leadership', platform: 'LinkedIn', body: '', media: '', publishDate: dLabel(-112), status: 'PUBLISHED', isDemo: true },
+  { id: 'c-007', title: 'Business in a decade of disruption', topic: 'Future of business', category: 'Future', platform: 'Website / Talk', body: '', media: '', publishDate: dLabel(-129), status: 'PUBLISHED', isDemo: true },
+  {
+    id: 'c-008',
+    title: 'Why customer feedback is not the same as customer understanding',
+    topic: 'Research methodology',
+    category: 'Customer',
+    platform: 'Website',
+    body: 'Feedback tells you what a customer noticed enough to mention. Understanding tells you what they never thought to say.\n\nStill drafting the middle section — want to use a retail example rather than a SaaS one.',
+    media: '',
+    publishDate: '',
+    status: 'DRAFT',
+    isDemo: true,
+  },
+  { id: 'c-009', title: 'The 3 questions a growth strategy must answer', topic: 'Growth frameworks', category: 'Growth', platform: 'LinkedIn / Website', body: 'What are we choosing to do, what are we choosing not to do, and why will those choices matter to the people we serve?\n\nIn review with one more pass needed on the examples.', media: '', publishDate: '', status: 'REVIEW', isDemo: true },
+  {
+    id: 'c-010',
+    title: 'What a decision-making tree looks like in a Dhaka retail store',
+    topic: 'Applying the decision tree in Bangladesh retail',
+    category: 'Bangladesh Business',
+    platform: 'Website / Facebook',
+    body: 'A retail chain does not have one customer decision tree — it has dozens, branching by category, by season, by store format. Mapping even one properly changes how a store team thinks about layout, staffing and promotions.\n\nWhen we mapped the tree for a single high-traffic category, the surprise was not the destination. It was how many customers abandoned the decision one step before purchase, at a point no dashboard was tracking.\n\nThis is a short version of a longer piece, written to show how a working idea becomes a published piece without extra planning time on Mehjabin’s side.',
+    media: 'Store-floor photo from the Prothom Alo training',
+    publishDate: '',
+    status: 'READY',
+    isDemo: true,
+  },
+  { id: 'c-011', title: 'What I wish I had known about strategy at the start', topic: 'Career lessons', category: 'Leadership', platform: 'LinkedIn', body: '', media: '', publishDate: '', status: 'IDEA', isDemo: true },
 ]
 
-// ─── ANALYTICS ────────────────────────────────────────────────────────────────
+// ─── ACTIVITY ─────────────────────────────────────────────────────────────────
 
-export const analyticsData: AnalyticsData = {
-  websiteVisitors: [
-    { label: 'Mar', value: 210 },
-    { label: 'Apr', value: 340 },
-    { label: 'May', value: 390 },
-    { label: 'Jun', value: 520 },
-    { label: 'Jul', value: 480 },
-    { label: 'Aug', value: 670 },
-    { label: 'Sep', value: 890 },
-  ],
-  topIdeas: [
-    { title: 'The customer is not a segment on a slide', views: 1240, category: 'Customer' },
-    { title: 'Why neuromarketing changes how we think about buying decisions', views: 980, category: 'Marketing' },
-    { title: 'Growth starts before the marketing plan', views: 810, category: 'Growth' },
-    { title: 'What Bangladesh businesses can learn from listening', views: 640, category: 'Bangladesh Business' },
-  ],
-  inquiries: [
-    { label: 'Jun', value: 3 },
-    { label: 'Jul', value: 4 },
-    { label: 'Aug', value: 6 },
-    { label: 'Sep', value: 8 },
-  ],
-  sources: [
-    { label: 'LinkedIn', value: 38, pct: 38 },
-    { label: 'Website', value: 27, pct: 27 },
-    { label: 'Referral', value: 21, pct: 21 },
-    { label: 'Facebook', value: 10, pct: 10 },
-    { label: 'Other', value: 4, pct: 4 },
-  ],
-  conversion: [
-    { stage: 'Website visitors', count: 890 },
-    { stage: 'Inquiries', count: 21 },
-    { stage: 'Discovery calls', count: 12 },
-    { stage: 'Proposals', count: 7 },
-    { stage: 'Clients', count: 5 },
-  ],
-}
+export const seedActivity: ActivityEntry[] = [
+  { id: 'act-001', tag: 'NEW', text: 'Sharmeen Kabir submitted a business strategy inquiry', dateISO: dISO(-4), isDemo: true },
+  { id: 'act-002', tag: 'BOOKING', text: 'Tania Rahman confirmed a discovery call', dateISO: dISO(-6), isDemo: true },
+  { id: 'act-003', tag: 'CONTENT', text: 'Article "What two minutes with bKash taught me about product design" published', dateISO: dISO(-16), isDemo: true },
+  { id: 'act-004', tag: 'PROPOSAL', text: 'Proposal sent to Dhaka Loop Retail', dateISO: dISO(-9), isDemo: true },
+  { id: 'act-005', tag: 'WON', text: 'Shonar Bangla Ventures keynote confirmed', dateISO: dISO(-19), isDemo: true },
+]

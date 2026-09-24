@@ -1,8 +1,5 @@
 import { useState, useEffect } from 'react'
-import {
-  Menu, X, Home, User, Briefcase, BookOpen, Calendar,
-  LayoutDashboard, Users, FolderKanban, FileText, BarChart3
-} from 'lucide-react'
+import { Menu, X, LayoutDashboard, Users, FolderKanban, FileText } from 'lucide-react'
 
 interface SiteHeaderProps {
   readonly admin?: boolean
@@ -14,11 +11,7 @@ export function SiteHeader({ admin, onNavigate, currentPath = '/' }: SiteHeaderP
   const [mobileOpen, setMobileOpen] = useState(false)
 
   useEffect(() => {
-    if (mobileOpen) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
-    }
+    document.body.style.overflow = mobileOpen ? 'hidden' : ''
     return () => {
       document.body.style.overflow = ''
     }
@@ -34,7 +27,6 @@ export function SiteHeader({ admin, onNavigate, currentPath = '/' }: SiteHeaderP
     { label: 'CRM', path: '/admin/crm', icon: Users },
     { label: 'Clients', path: '/admin/clients', icon: FolderKanban },
     { label: 'Content', path: '/admin/content', icon: FileText },
-    { label: 'Analytics', path: '/admin/analytics', icon: BarChart3 },
   ]
 
   if (admin) {
@@ -56,7 +48,7 @@ export function SiteHeader({ admin, onNavigate, currentPath = '/' }: SiteHeaderP
             ))}
           </nav>
           <div className="header-actions">
-            <button className="header-exit" onClick={() => nav('/')}>↗ Public site</button>
+            <button className="header-exit" onClick={() => nav('/')}>&#8599; Public site</button>
             <button className="hamburger admin-hamburger" onClick={() => setMobileOpen(true)} aria-label="Open menu">
               <Menu size={22} />
             </button>
@@ -65,7 +57,7 @@ export function SiteHeader({ admin, onNavigate, currentPath = '/' }: SiteHeaderP
 
         {mobileOpen && (
           <div className="mobile-overlay" onClick={() => setMobileOpen(false)}>
-            <div className="mobile-nav admin-mobile-drawer" onClick={(e) => e.stopPropagation()}>
+            <div className="mobile-nav admin-mobile-drawer" onClick={e => e.stopPropagation()}>
               <div className="mobile-nav-top">
                 <button className="wordmark" onClick={() => nav('/admin')}>
                   mehjabin badhon<br /><i>business os</i>
@@ -82,28 +74,23 @@ export function SiteHeader({ admin, onNavigate, currentPath = '/' }: SiteHeaderP
                     className={currentPath === link.path ? 'active' : ''}
                   >
                     <span>{link.label}</span>
-                    {currentPath === link.path && <span className="active-dot">●</span>}
+                    {currentPath === link.path && <span className="active-dot">&#9679;</span>}
                   </button>
                 ))}
               </nav>
               <button className="primary mobile-book" onClick={() => nav('/')}>
-                ↗ Exit to Public Site
+                &#8599; Exit to Public Site
               </button>
             </div>
           </div>
         )}
 
-        {/* Mobile Persistent Bottom Nav Bar (Admin) */}
         <nav className="mobile-bottom-bar admin-bottom-bar" aria-label="Admin Navigation">
           {adminNavLinks.map(link => {
             const Icon = link.icon
             const isActive = currentPath === link.path
             return (
-              <button
-                key={link.path}
-                onClick={() => nav(link.path)}
-                className={`bottom-tab ${isActive ? 'active' : ''}`}
-              >
+              <button key={link.path} onClick={() => nav(link.path)} className={`bottom-tab${isActive ? ' active' : ''}`}>
                 <Icon size={18} />
                 <span>{link.label}</span>
               </button>
@@ -114,21 +101,12 @@ export function SiteHeader({ admin, onNavigate, currentPath = '/' }: SiteHeaderP
     )
   }
 
-  const navLinks = [
-    { label: 'Home', path: '/', icon: Home },
-    { label: 'About', path: '/about', icon: User },
-    { label: 'Work', path: '/work-with-me', icon: Briefcase },
-    { label: 'Ideas', path: '/ideas', icon: BookOpen },
-    { label: 'Book', path: '/book', icon: Calendar },
-  ]
-
   const headerNavLinks = [
     { label: 'Home', path: '/' },
     { label: 'About', path: '/about' },
     { label: 'Work With Me', path: '/work-with-me' },
     { label: 'Ideas', path: '/ideas' },
-    { label: 'Start Here', path: '/start-here' },
-    { label: 'Let\'s Talk', path: '/book' },
+    { label: 'Start Here', path: '/start' },
   ]
 
   return (
@@ -150,7 +128,7 @@ export function SiteHeader({ admin, onNavigate, currentPath = '/' }: SiteHeaderP
         </nav>
         <div className="header-actions">
           <button className="book-btn" onClick={() => nav('/book')}>
-            Book a Consultation
+            Let's Talk
           </button>
           <button className="hamburger" onClick={() => setMobileOpen(true)} aria-label="Open menu">
             <Menu size={22} />
@@ -160,7 +138,7 @@ export function SiteHeader({ admin, onNavigate, currentPath = '/' }: SiteHeaderP
 
       {mobileOpen && (
         <div className="mobile-overlay" onClick={() => setMobileOpen(false)}>
-          <div className="mobile-nav" onClick={(e) => e.stopPropagation()}>
+          <div className="mobile-nav" onClick={e => e.stopPropagation()}>
             <div className="mobile-nav-top">
               <button className="wordmark" onClick={() => nav('/')}>
                 mehjabin badhon<br /><i>let's talk business</i>
@@ -177,12 +155,12 @@ export function SiteHeader({ admin, onNavigate, currentPath = '/' }: SiteHeaderP
                   className={currentPath === link.path ? 'active' : ''}
                 >
                   <span>{link.label}</span>
-                  {currentPath === link.path && <span className="active-dot">●</span>}
+                  {currentPath === link.path && <span className="active-dot">&#9679;</span>}
                 </button>
               ))}
             </nav>
             <button className="primary mobile-book" onClick={() => nav('/book')}>
-              Book a Consultation
+              Let's Talk
             </button>
           </div>
         </div>
@@ -190,4 +168,3 @@ export function SiteHeader({ admin, onNavigate, currentPath = '/' }: SiteHeaderP
     </>
   )
 }
-
